@@ -446,3 +446,4 @@
 ## Done (M3-2 release operations)
 - Switched `origin` from `https://github.com/66680/OCR.git` to `https://github.com/66680/fapiao.git`.
 - Pushed `invstruct-main` to new remote repository for initialization (`git push -u origin invstruct-main`).
+- Created and pushed release tag `v0.1.0` on `invstruct-main`.
