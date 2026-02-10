@@ -1,0 +1,31 @@
+locale: zh-CN
+currency: CNY
+template_dir: configs/templates
+export_template_dir: configs/export_templates
+log_level: INFO
+low_conf: 0.75
+ocr_engine: mock
+pdf_mode: merge
+max_pdf_pages: 50
+anomalies:
+  duplicate:
+    enabled: true
+    use_sha256: true
+    use_business_key: true
+    business_key_fields:
+      - invoice_number
+      - issue_date
+      - total_amount_gross
+      - merchant_tax_id
+  amount_mismatch:
+    enabled: true
+    tolerance: 0.01
+  low_conf:
+    enabled: true
+    threshold: 0.75
+    require_core_fields: true
+    missing_severity: warning
+job_dir: out/jobs
+job_retention_days: 30
+job_keep_last: 100
+job_cleanup_on_startup: false

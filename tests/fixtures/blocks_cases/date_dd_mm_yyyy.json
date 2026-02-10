@@ -1,0 +1,14 @@
+{
+  "name": "date_dd_mm_yyyy",
+  "expect": {
+    "amount_min_conf": 0.8,
+    "date": "2026-02-12",
+    "invoice": "A20260212001"
+  },
+  "blocks": [
+    {"text": "Grocery GmbH", "bbox": [10, 10, 190, 30], "conf": 0.91, "page": 1},
+    {"text": "Invoice No. A20260212001", "bbox": [10, 35, 280, 55], "conf": 0.9, "page": 1},
+    {"text": "Invoice Date 12-02-2026", "bbox": [10, 60, 260, 80], "conf": 0.9, "page": 1},
+    {"text": "Total Amount 66.80", "bbox": [10, 85, 240, 105], "conf": 0.88, "page": 1}
+  ]
+}

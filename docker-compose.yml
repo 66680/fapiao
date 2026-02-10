@@ -1,0 +1,17 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.cpu
+    environment:
+      INVSTRUCT_OCR_ENGINE: mock
+      INVSTRUCT_TEMPLATE_DIR: configs/templates
+      INVSTRUCT_EXPORT_TEMPLATE_DIR: configs/export_templates
+      INVSTRUCT_JOB_DIR: out/jobs
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./configs:/app/configs
+      - ./out:/app/out
+      - ./tests/fixtures:/app/tests/fixtures:ro
+    command: uvicorn invstruct.api.app:app --host 0.0.0.0 --port 8000

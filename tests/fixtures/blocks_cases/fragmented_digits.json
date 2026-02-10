@@ -1,0 +1,14 @@
+{
+  "name": "fragmented_digits",
+  "expect": {
+    "amount_min_conf": 0.8,
+    "date": "2026-02-11",
+    "tax": "91350100MA12345678"
+  },
+  "blocks": [
+    {"text": "Fresh Store", "bbox": [10, 10, 150, 30], "conf": 0.9, "page": 1},
+    {"text": "开票日期: 2026/02/11", "bbox": [10, 35, 250, 55], "conf": 0.92, "page": 1},
+    {"text": "税号: 91350100MA12345678", "bbox": [10, 60, 320, 80], "conf": 0.9, "page": 1},
+    {"text": "合计 ¥ 1 2 3 . 0 0", "bbox": [10, 85, 260, 105], "conf": 0.9, "page": 1}
+  ]
+}

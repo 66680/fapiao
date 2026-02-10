@@ -1,3 +1,2 @@
-from invstruct.api.app import app
+"""API package."""
 
-__all__ = ["app"]

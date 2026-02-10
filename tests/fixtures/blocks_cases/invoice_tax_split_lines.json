@@ -1,0 +1,17 @@
+{
+  "name": "invoice_tax_split_lines",
+  "expect": {
+    "amount_min_conf": 0.8,
+    "date": "2026-02-13",
+    "tax": "ABCD1234567890"
+  },
+  "blocks": [
+    {"text": "Nova Store", "bbox": [10, 10, 150, 30], "conf": 0.9, "page": 1},
+    {"text": "Invoice", "bbox": [10, 35, 90, 55], "conf": 0.86, "page": 1},
+    {"text": "No. B88990011", "bbox": [95, 35, 220, 55], "conf": 0.86, "page": 1},
+    {"text": "Tax ID", "bbox": [10, 60, 90, 80], "conf": 0.87, "page": 1},
+    {"text": "ABCD1234567890", "bbox": [95, 60, 260, 80], "conf": 0.87, "page": 1},
+    {"text": "Date 2026年2月13日", "bbox": [10, 85, 230, 105], "conf": 0.9, "page": 1},
+    {"text": "应付 300.00", "bbox": [10, 110, 180, 130], "conf": 0.9, "page": 1}
+  ]
+}

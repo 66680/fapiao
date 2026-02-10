@@ -1,0 +1,54 @@
+template_id: generic_expense_v1
+version: 1.0.0
+description: Generic expense import format with trace and anomaly fields
+columns:
+- name: expense_date
+  source: issue_date
+  transform: date_iso
+  default: null
+  required: false
+- name: merchant
+  source: merchant_name
+  transform: as_is
+  default: null
+  required: false
+- name: amount
+  source: total_amount_gross
+  transform: amount_2dp
+  default: null
+  required: false
+- name: currency
+  source: currency
+  transform: as_is
+  default: null
+  required: false
+- name: invoice_number
+  source: invoice_number
+  transform: as_is
+  default: null
+  required: false
+- name: merchant_tax_id
+  source: merchant_tax_id
+  transform: as_is
+  default: null
+  required: false
+- name: anomaly_codes
+  source: anomalies
+  transform: anomaly_codes_join
+  default: null
+  required: false
+- name: confidence_overall
+  source: confidence.overall
+  transform: as_is
+  default: null
+  required: false
+- name: source_file
+  source: source.file_name
+  transform: as_is
+  default: null
+  required: false
+- name: trace_id
+  source: source.trace_id
+  transform: as_is
+  default: null
+  required: false
