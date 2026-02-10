@@ -447,3 +447,8 @@
 - Switched `origin` from `https://github.com/66680/OCR.git` to `https://github.com/66680/fapiao.git`.
 - Pushed `invstruct-main` to new remote repository for initialization (`git push -u origin invstruct-main`).
 - Created and pushed release tag `v0.1.0` on `invstruct-main`.
+- Re-ran release rehearsal on publish branch (`scripts/release.ps1` + strict release check) and generated audited assets:
+  - `release/invstruct_0.1.0_release_bundle.zip`
+  - `release/invstruct_0.1.0_release_bundle.sha256`
+  - `release/release_notes_0.1.0.md`
+- `gh` CLI is not available on current machine; GitHub Release creation is pending manual web upload using the generated assets above.
