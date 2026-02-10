@@ -1,0 +1,14 @@
+{
+  "name": "bilingual_total_keyword",
+  "expect": {
+    "amount_min_conf": 0.8,
+    "date": "2026-02-09",
+    "invoice": "INV12345"
+  },
+  "blocks": [
+    {"text": "My Store LLC", "bbox": [10, 10, 220, 30], "conf": 0.92, "page": 1},
+    {"text": "Invoice No: INV12345", "bbox": [10, 35, 260, 55], "conf": 0.9, "page": 1},
+    {"text": "Date: 2026-02-09", "bbox": [10, 60, 240, 80], "conf": 0.9, "page": 1},
+    {"text": "Grand Total ¥123.45", "bbox": [10, 85, 260, 105], "conf": 0.9, "page": 1}
+  ]
+}

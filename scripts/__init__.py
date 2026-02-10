@@ -1,1 +1,2 @@
-"""Automation scripts used by CI and local verification."""
+"""Utility scripts for CI and release gates."""
+

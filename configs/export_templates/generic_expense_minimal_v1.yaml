@@ -1,0 +1,19 @@
+template_id: generic_expense_minimal_v1
+version: 1.0.0
+description: Minimal expense import format
+columns:
+  - name: date
+    source: issue_date
+    transform: date_iso
+  - name: merchant
+    source: merchant_name
+    transform: as_is
+  - name: amount
+    source: total_amount_gross
+    transform: amount_2dp
+  - name: currency
+    source: currency
+    transform: as_is
+  - name: anomaly_codes
+    source: anomalies
+    transform: anomaly_codes_join

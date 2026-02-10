@@ -1,0 +1,16 @@
+{
+  "name": "multi_column_amount",
+  "expect": {
+    "amount_min_conf": 0.8,
+    "date": "2026-02-10",
+    "merchant": "Coffee Market"
+  },
+  "blocks": [
+    {"text": "Coffee Market", "bbox": [10, 10, 180, 30], "conf": 0.93, "page": 1},
+    {"text": "Print Time 2026-02-10 12:00", "bbox": [10, 35, 300, 55], "conf": 0.88, "page": 1},
+    {"text": "Date 2026-02-10", "bbox": [10, 60, 220, 80], "conf": 0.9, "page": 1},
+    {"text": "Item A 12.00", "bbox": [10, 85, 180, 105], "conf": 0.85, "page": 1},
+    {"text": "Item B 80.00", "bbox": [10, 110, 180, 130], "conf": 0.85, "page": 1},
+    {"text": "Amount Due 92.00", "bbox": [220, 110, 380, 130], "conf": 0.9, "page": 1}
+  ]
+}

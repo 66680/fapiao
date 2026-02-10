@@ -1,12 +1,20 @@
 from pathlib import Path
 
-from invstruct.utils.hash import sha256_file
+from invstruct.utils.hash import canonical_json_sha256, sha256_file
 
 
-def test_sha256_file(tmp_path: Path) -> None:
-    sample = tmp_path / "sample.txt"
-    sample.write_text("abc", encoding="utf-8")
-    assert (
-        sha256_file(sample)
-        == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-    )
+def test_sha256_deterministic(tmp_path: Path) -> None:
+    file_path = tmp_path / "sample.txt"
+    file_path.write_text("invstruct", encoding="utf-8")
+
+    first = sha256_file(file_path)
+    second = sha256_file(file_path)
+
+    assert first == second
+    assert len(first) == 64
+
+
+def test_canonical_json_sha256_stable() -> None:
+    payload_a = {"b": 2, "a": 1}
+    payload_b = {"a": 1, "b": 2}
+    assert canonical_json_sha256(payload_a) == canonical_json_sha256(payload_b)

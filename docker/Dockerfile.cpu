@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY pyproject.toml README.md /app/
+COPY src /app/src
+COPY configs /app/configs
+COPY docs /app/docs
+COPY scripts /app/scripts
+
+RUN pip install --no-cache-dir -e .
+RUN mkdir -p /app/out/jobs /app/configs/templates /app/configs/export_templates
+
+ENV INVSTRUCT_OCR_ENGINE=mock
+ENV INVSTRUCT_TEMPLATE_DIR=configs/templates
+ENV INVSTRUCT_EXPORT_TEMPLATE_DIR=configs/export_templates
+ENV INVSTRUCT_JOB_DIR=out/jobs
+
+EXPOSE 8000
+
+CMD ["uvicorn", "invstruct.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

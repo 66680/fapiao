@@ -1,50 +1,79 @@
-# M1 Plan
+# M1 Plan (Day3-7)
 
-## M1.8: downstream contract governance
+## Goal
+- Implement a minimal rule/template-first parsing chain that is shared by CLI and API.
+- Deliver usable `parse/batch/export/check/template` command behaviors.
+- Keep M0 contracts stable: error payload, trace/sha256, lightweight OCR adapter.
 
-### Done
-- Added `RECORD_SCHEMA_VERSION=1` and aligned `EXPORT_SCHEMA_VERSION=1` governance constants.
-- Added contract artifacts for record/export schemas under `src/invstruct/contracts`.
-- Added CLI contract commands for show/schema/validate-records/validate-export.
-- Added API meta endpoints for contract versions and JSON schemas.
-- Added regression tests for schema defaults, deterministic schema output, CLI contract flows, export validation, and API contract endpoints.
+## In Scope
+- Rules extractor for merchant/date/amount/invoice_no/tax_id with provenance and confidence.
+- Shared pipeline function to produce `InvoiceRecord` from file path.
+- CLI batch/export/check/template MVP behavior.
+- API `/v1/parse` wired to shared pipeline.
+- Tests for rules, pipeline, CLI, export, API.
 
-### Next
-- Integrate contract validation into CI workflow gates for pull requests.
-- Add release checklist to bump schema versions only with explicit migration notes.
+## Out of Scope
+- Real OCR model integration as required dependency.
+- Full PDF multi-page parsing runtime.
+- Template learning/training pipeline.
 
-## M1.9: CI workflow gates and schema bump policy
+## Risks
+- Locale-specific date parsing ambiguity.
+- Template/rules precedence conflicts.
+- Optional dependency behavior consistency.
 
-### Done
-- Added GitHub Actions CI workflow for `push` and `pull_request` with Python 3.11/3.12 matrix.
-- Added automated contract gates script to generate temporary records/export artifacts and validate them.
-- Added schema bump policy checker that blocks schema version number changes without migration notes.
-- Added regression tests for CI contract gate script logic and schema bump policy regex evaluation.
+## Mitigation
+- Keep deterministic fallback rules with explicit precedence.
+- Preserve existing error codes and payload structure.
+- Add focused tests for critical extraction and command paths.
 
-### Next
-- Add PR annotation output for failed contract gates to speed up triage.
-- Add a release checklist item to explicitly confirm migration notes quality when schema versions change.
+## M1.1: PDF stub skipped-record alignment
+- Batch mode now emits a placeholder `InvoiceRecord` for each PDF input with `status=skipped`.
+- Skipped records preserve `trace_id` and `sha256` so downstream evidence chain remains intact.
+- Error context is embedded into optional fields: `error_code=E3001`, `error_message=PDF not supported yet`.
+- Single-file parse semantics are unchanged: parsing PDF from `parse` still returns standard error payload.
+- Export output is aligned with batch totals by adding `status/error_code/error_message` columns.
 
-## M1.10: CI triage acceleration and release gate
+## M1.2: Real PDF text parsing (opt-in)
+- Added PDF text parsing path backed by `pdfplumber` to extract multi-page text blocks and page-level provenance.
+- Added explicit enable switches: CLI `--allow-pdf` and API `allow_pdf=true`; default behavior remains backward-compatible (`E3001`).
+- Batch now supports parse-or-skip behavior for PDFs: default skip, opt-in parse success, and deterministic error record fallback.
+- Introduced deterministic retry metadata (`retry_key`) and parser metadata (`parser_version`) on `InvoiceRecord`.
+- Added page-level warning capture for partial extraction failures while still returning `status=success` when usable text exists.
 
-### Done
-- Enhanced CI workflows to publish richer `$GITHUB_STEP_SUMMARY` diagnostics for pytest, schema policy, and contract gates.
-- Added machine-readable `ci_gate_report.json` artifact output and upload for gate triage.
-- Added tag-triggered `release-gate.yml` workflow to enforce test/policy/contract checks before release.
-- Added tests for gate report generation and tag-mode schema policy logic.
+## M1.3: PDF quality hardening
+- Upgraded PDF word-to-line grouping with configurable Y-cluster tolerance and line-merge switch.
+- Improved line text join strategy for mixed CJK/Latin/amount tokens to reduce fragmented extraction misses.
+- Kept provenance chain complete (`page`, merged `bbox`, plus downstream `line_id`/`line_text` from extractor stage).
+- Added API regression tests for default PDF rejection (`E3001`) and opt-in parse success (`allow_pdf=true`).
+- Enhanced batch/export diagnostics with `run_report.json` per-file summary and export columns `warnings_count` / `warnings_json`.
 
-### Next
-- Add PR-level annotations that link directly to failing command snippets in artifacts.
-- Extend release gate to verify changelog consistency with schema/version metadata.
+## M1.4: Extraction quality tuning
+- Added rule-tuning config knobs for amount/date normalization and keyword preference with environment overrides.
+- Reworked rules extraction scoring for bilingual amount/date/invoice/tax cases with explainable confidence reasons.
+- Added benchmark fixture pack (`tests/fixtures/blocks_cases`) with six deterministic block scenarios for regression safety.
+- Added optional debug artifacts (`--debug-artifacts`) to CLI parse/batch, writing normalized lines, candidates, and selected reasons.
+- Added regression tests for benchmark fixtures and debug artifact generation while preserving default compatibility behavior.
 
-## M1.11: PR annotations and release changelog gate
+## M1.5: Warnings cleanup + OCR engine skeleton
+- Replaced FastAPI startup `on_event` hook with lifespan startup handler to remove deprecation warnings in test output.
+- Added OCR engine skeleton unification via `extract_blocks(...)` while keeping `recognize(...)` backward compatibility.
+- Added `FixturesOcrEngine` for deterministic end-to-end replay from `<name>.blocks.json` or `.invstruct.blocks.jsonl`.
+- Added CLI overrides `--ocr-engine auto|mock|fixtures` and `--fixtures-dir` for parse/batch, default behavior unchanged.
+- Added regression tests for warnings cleanliness, fixtures-engine parse/batch roundtrip, and CLI help option visibility.
 
-### Done
-- Added CI annotation emitter (`scripts/emit_ci_annotations.py`) to map gate report failures into GitHub log annotations.
-- Wired CI workflow to emit annotations on every run and keep gate semantics unchanged.
-- Added changelog consistency checker (`scripts/check_changelog_consistency.py`) and integrated it into tag release gate.
-- Added regression tests for annotation limits/ok-notice behavior and changelog consistency checks.
+## M1.6: Export stability + merge dedup + compatibility regressions
+- Added `merge` CLI command to combine multiple records files with deterministic dedup key priority (`source.sha256` > `retry_key` > `doc_id`).
+- Implemented conflict resolution priority for merge (`success > skipped > failed`, then higher confidence), and wrote `merge_report.json`.
+- Hardened export summary/report columns with stable ordering and explicit diagnostics (`status/error_code/error_message/warnings_count/parser_version/retry_key`).
+- Ensured export handles mixed legacy/new records with missing fields without crashing CSV/XLSX generation.
+- Added compatibility regression tests for CLI export entrypoints and API batch export response branches.
 
-### Next
-- Add file-level annotation mapping from command stderr patterns to improve triage accuracy.
-- Extend changelog check to validate subsection templates per release type.
+## M1.7: Data quality controls
+- Added configurable merge dedup profiles (`strict_sha256`, `business_key_hybrid`, `temporal_window`) with default behavior preserved.
+- Enhanced merge audit trail with canonical snapshot hashes and per-conflict kept-vs-dropped traceability.
+- Added merge report metadata (`dedup_profile`, `key_type_stats`, `snapshot_hash_algorithm`, `conflicts`) for deterministic review.
+- Added export schema version stamping for downstream ETL checks:
+  - CSV header comments (default on, disable with `--no-header-comments`)
+  - XLSX `_meta` sheet with schema version and generation metadata.
+- Added regression tests for dedup profiles, conflict traceability hashes, and schema version stamping.
