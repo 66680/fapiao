@@ -451,4 +451,5 @@
   - `release/invstruct_0.1.0_release_bundle.zip`
   - `release/invstruct_0.1.0_release_bundle.sha256`
   - `release/release_notes_0.1.0.md`
-- `gh` CLI is not available on current machine; GitHub Release creation is pending manual web upload using the generated assets above.
+- Installed `gh` CLI, but host authentication is still pending (`gh auth status` not logged in).
+- GitHub Release creation remains pending manual web upload (or `gh auth login` then `gh release create`) using the generated assets above.
