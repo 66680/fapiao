@@ -533,6 +533,15 @@
 - Re-run CI and verify `coverage-gate-py3.14` reaches the expected >=80% baseline.
 - Once green, keep matrix tests as functional checks and reserve coverage enforcement for the dedicated gate job.
 
+## Done (PR merge to mainline)
+- Merged PR `#1` (`fix/py310-datetime-utc` -> `invstruct-main`) with squash merge.
+- Merge commit on `invstruct-main`: `e347ad51ab2308c080348d18804a6a5318ce8ffe`.
+- Scope merged: Python 3.10 UTC compatibility fix + CI gate stabilization (matrix test stability + dedicated coverage gate completion).
+
+## Next (post-merge gate check)
+- Verify latest `invstruct-main` CI run is green across matrix test jobs, coverage gate, build-dist, and bandit.
+- Keep release/tag actions blocked until `invstruct-main` CI remains green.
+
 ## Done (PR creation for mainline merge)
 - Opened merge PR from `fix/py310-datetime-utc` into `invstruct-main`:
   - PR: `https://github.com/66680/fapiao/pull/1`
