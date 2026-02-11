@@ -480,3 +480,20 @@
 - Add deterministic artifact manifest validation (`release_manifest.json`) in `release_check --strict`.
 - Add CI cache strategy and split slow/fast test tiers to reduce lead time.
 - Add automated dependency update + security advisory triage workflow.
+
+## Done (M3-3 CI fix for run 21897741886)
+- Collected and analyzed failing log for `test-ubuntu-latest-py3.12` (job `63217752723`), confirming two evidence points:
+  - platform-sensitive assertion failure in `tests/test_cli_ocr_engine_help.py`
+  - matrix-wide coverage gate breach (`Total coverage: 76.62%`) when any test fails
+- Applied minimal CI stabilization in `.github/workflows/ci.yml`:
+  - matrix test jobs now run functional checks via `pytest -q`
+  - added dedicated `coverage-gate-py3.14` job to enforce `pytest --cov=invstruct --cov-fail-under=80 -q`
+- Hardened CLI help test assertion to be formatting/ANSI tolerant while preserving option presence checks.
+
+## Next (post-fix verification)
+- Push this CI fix and monitor the next run for green status on:
+  - `test-*` matrix jobs
+  - `coverage-gate-py3.14`
+  - `security-scan-bandit`
+  - `build-dist`
+- If any job still fails, collect the first failing job log and continue with minimal-scope remediation only.
