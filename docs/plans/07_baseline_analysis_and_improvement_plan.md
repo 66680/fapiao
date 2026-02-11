@@ -481,6 +481,16 @@
 - Add CI cache strategy and split slow/fast test tiers to reduce lead time.
 - Add automated dependency update + security advisory triage workflow.
 
+## Done (py3.10 UTC compatibility fix)
+- Added `src/invstruct/utils/time_compat.py` with a cross-version UTC constant (`getattr(datetime, "UTC", datetime.timezone.utc)`).
+- Updated `src/invstruct/jobs.py` and `tests/test_jobs_cleanup_prunes_old.py` to use shared UTC compatibility import.
+- Added regression test `tests/test_py310_utc_compat_import.py` to lock compatibility for module imports and UTC behavior.
+- Verified local checks for fix branch: Python 3.14 `pytest -q` green and Python 3.10 `pytest -q` green.
+
+## Next (post-fix monitoring)
+- Monitor remote matrix CI on this branch and confirm Python 3.10 collection/import errors are resolved.
+- If a new failing test appears, capture first failing node + traceback tail and triage separately as a follow-up issue.
+
 ## Done (M3-3 CI fix for run 21897741886)
 - Collected and analyzed failing log for `test-ubuntu-latest-py3.12` (job `63217752723`), confirming two evidence points:
   - platform-sensitive assertion failure in `tests/test_cli_ocr_engine_help.py`
