@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from invstruct.jobs import cleanup_jobs
+from invstruct.utils.time_compat import UTC
 
 
 def _write_job(path: Path, payload: dict) -> None:
