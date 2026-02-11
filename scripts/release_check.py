@@ -5,6 +5,7 @@ import json
 import re
 import shutil
 import subprocess
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -97,6 +98,86 @@ def _run(cmd: list[str]) -> tuple[int, str]:
     return proc.returncode, output.strip()
 
 
+def _json_digest(payload: dict[str, Any]) -> str:
+    normalized = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(normalized).hexdigest()
+
+
+def check_dist_artifacts_current_version_only(dist_dir: Path, version: str) -> CheckResult:
+    if not dist_dir.exists():
+        return CheckResult("dist_current_version_only", True, False, "dist directory missing")
+    allowed = {
+        f"invstruct-{version}.tar.gz",
+    }
+    disallowed: list[str] = []
+    has_wheel = False
+    for path in sorted(dist_dir.glob("*")):
+        if not path.is_file():
+            continue
+        name = path.name
+        if name.startswith(f"invstruct-{version}-") and name.endswith(".whl"):
+            has_wheel = True
+            continue
+        if name in allowed:
+            continue
+        disallowed.append(name)
+    if not has_wheel:
+        return CheckResult("dist_current_version_only", True, False, f"missing wheel for version {version}")
+    if disallowed:
+        return CheckResult("dist_current_version_only", True, False, f"unexpected dist artifacts: {', '.join(disallowed)}")
+    return CheckResult("dist_current_version_only", True, True, f"dist artifacts match version {version}")
+
+
+def check_release_artifacts_current_version_only(release_dir: Path, version: str) -> CheckResult:
+    if not release_dir.exists():
+        return CheckResult("release_current_version_only", True, False, "release directory missing")
+
+    expected_prefixes = (
+        f"invstruct_{version}_release_bundle.",
+        f"release_notes_{version}.md",
+    )
+    disallowed: list[str] = []
+    required = {
+        f"invstruct_{version}_release_bundle.zip",
+        f"invstruct_{version}_release_bundle.sha256",
+    }
+    present = set()
+    for path in sorted(release_dir.glob("*")):
+        if not path.is_file():
+            continue
+        name = path.name
+        if name in required:
+            present.add(name)
+        if name.startswith(expected_prefixes[0]) or name == expected_prefixes[1]:
+            continue
+        disallowed.append(name)
+    missing = sorted(required - present)
+    if missing:
+        return CheckResult("release_current_version_only", True, False, f"missing release artifacts: {', '.join(missing)}")
+    if disallowed:
+        return CheckResult("release_current_version_only", True, False, f"unexpected release artifacts: {', '.join(disallowed)}")
+    return CheckResult("release_current_version_only", True, True, f"release artifacts match version {version}")
+
+
+def check_openapi_in_sync(openapi_path: Path, latest_payload: dict[str, Any]) -> CheckResult:
+    if not openapi_path.exists():
+        return CheckResult("openapi_in_sync", True, False, f"missing: {openapi_path}")
+    try:
+        existing = json.loads(openapi_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return CheckResult("openapi_in_sync", True, False, f"invalid openapi.json: {exc}")
+    same = _json_digest(existing) == _json_digest(latest_payload)
+    if same:
+        return CheckResult("openapi_in_sync", True, True, "docs/api/openapi.json matches app.openapi()")
+    return CheckResult("openapi_in_sync", True, False, "openapi mismatch: run `python scripts/dump_openapi.py`")
+
+
+def _project_version_from_payload(payload: dict[str, Any]) -> str | None:
+    project = payload.get("project") if isinstance(payload, dict) else {}
+    version = project.get("version") if isinstance(project, dict) else None
+    return str(version) if version else None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="invstruct release readiness checks")
     parser.add_argument("--strict", action="store_true", help="Return non-zero when required checks fail")
@@ -107,13 +188,18 @@ def main() -> int:
     pyproject_path = repo_root / "pyproject.toml"
     results: list[CheckResult] = []
 
+    project_version: str | None = None
+    pyproject_payload: dict[str, Any] = {}
+
     if not pyproject_path.exists():
         results.append(CheckResult("pyproject_exists", True, False, f"missing: {pyproject_path}"))
     else:
         payload = _load_pyproject(pyproject_path)
+        pyproject_payload = payload
         project = payload.get("project") if isinstance(payload, dict) else {}
         name = project.get("name") if isinstance(project, dict) else None
         version = project.get("version") if isinstance(project, dict) else None
+        project_version = str(version) if version else None
         results.append(CheckResult("project_name", True, bool(name), f"name={name!r}"))
         semver_ok = bool(version) and bool(re.fullmatch(r"\d+\.\d+\.\d+", str(version)))
         results.append(CheckResult("project_version_semver", True, semver_ok, f"version={version!r}"))
@@ -137,6 +223,21 @@ def main() -> int:
 
     for cmd in ("python", "pip", "pytest"):
         results.append(CheckResult(f"command:{cmd}", True, shutil.which(cmd) is not None, shutil.which(cmd) or "not found"))
+
+    if project_version:
+        results.append(check_dist_artifacts_current_version_only(repo_root / "dist", project_version))
+        results.append(check_release_artifacts_current_version_only(repo_root / "release", project_version))
+
+    openapi_path = repo_root / "docs" / "api" / "openapi.json"
+    try:
+        from invstruct.api.app import app
+
+        results.append(check_openapi_in_sync(openapi_path, app.openapi()))
+    except Exception as exc:  # noqa: BLE001
+        results.append(CheckResult("openapi_in_sync", True, False, f"failed to load app/openapi: {exc}"))
+
+    if not project_version:
+        project_version = _project_version_from_payload(pyproject_payload)
 
     # optional docker availability
     docker_ok = shutil.which("docker") is not None

@@ -453,3 +453,30 @@
   - `release/release_notes_0.1.0.md`
 - Installed `gh` CLI, but host authentication is still pending (`gh auth status` not logged in).
 - GitHub Release creation remains pending manual web upload (or `gh auth login` then `gh release create`) using the generated assets above.
+
+## Done (M3-3 post-release hardening)
+- Strengthened CI quality gates in `.github/workflows/ci.yml`:
+  - Added coverage gate (`pytest --cov=invstruct --cov-report=xml --cov-fail-under=80 -q`).
+  - Added dedicated Bandit job (`bandit -r src/invstruct -ll`) to fail on high severity findings.
+  - Added explicit build verification (`python -m build`) in CI build pipeline.
+- Hardened release reproducibility checks in `scripts/release_check.py`:
+  - Fail when `dist/` contains artifacts not matching current `project.version`.
+  - Fail when `release/` contains artifacts outside current-version bundle scope.
+  - Fail when `docs/api/openapi.json` diverges from runtime `app.openapi()`.
+- Hardened version bump safety in `scripts/bump_version.py`:
+  - Refuse version bump when git worktree is dirty.
+  - Refuse version bump when target tag already exists.
+- Added engineering guardrails:
+  - `.pre-commit-config.yaml` with `black`, `isort`, `flake8` hooks.
+  - `SECURITY.md` responsible disclosure policy placeholder.
+  - `README.md` developer hooks section for pre-commit bootstrap.
+- Added regression coverage for new hardening behavior:
+  - `tests/test_release_check_reproducibility.py`
+  - `tests/test_bump_version_safety.py`
+  - `tests/test_coverage_boosters_m3_3.py`
+
+## Next (M3-4 reliability iteration)
+- Add branch protection + required status checks (`test`, `build-dist`, `security-scan`) on default branch.
+- Add deterministic artifact manifest validation (`release_manifest.json`) in `release_check --strict`.
+- Add CI cache strategy and split slow/fast test tiers to reduce lead time.
+- Add automated dependency update + security advisory triage workflow.

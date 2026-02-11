@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 from pathlib import Path
 
 
@@ -37,6 +38,37 @@ def _bump_patch(version: str) -> str:
     return f"{major}.{minor}.{patch + 1}"
 
 
+def ensure_git_worktree_clean(repo_root: Path) -> None:
+    proc = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=repo_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout or "git status failed").strip()
+        raise RuntimeError(f"Could not verify git working tree state: {detail}")
+    if proc.stdout.strip():
+        raise RuntimeError("Working tree is not clean; commit/stash changes before bumping version")
+
+
+def ensure_target_tag_not_exists(repo_root: Path, target_version: str) -> None:
+    tag_name = f"v{target_version}"
+    proc = subprocess.run(
+        ["git", "tag", "--list", tag_name],
+        cwd=repo_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout or "git tag failed").strip()
+        raise RuntimeError(f"Could not verify existing tags: {detail}")
+    if proc.stdout.strip() == tag_name:
+        raise RuntimeError(f"Tag already exists: {tag_name}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bump invstruct version")
     group = parser.add_mutually_exclusive_group(required=True)
@@ -52,6 +84,9 @@ def main() -> int:
     target = _bump_patch(current) if args.patch else args.to
     if not target or not re.fullmatch(r"\d+\.\d+\.\d+", target):
         raise ValueError(f"Target version must be semantic version: {target!r}")
+
+    ensure_git_worktree_clean(repo_root)
+    ensure_target_tag_not_exists(repo_root, target)
 
     pyproject_text = pyproject_path.read_text(encoding="utf-8")
     init_text = init_path.read_text(encoding="utf-8")

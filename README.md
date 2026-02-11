@@ -135,6 +135,13 @@ PowerShell one-shot:
 powershell -ExecutionPolicy Bypass -File .\scripts\release.ps1
 ```
 
+## Developer Hooks
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
 ## Demos (placeholders)
 
 - GIF: folder batch -> report.xlsx
